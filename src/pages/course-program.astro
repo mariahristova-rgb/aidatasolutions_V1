@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+---
+<BaseLayout title="Course programme | AI Data Solutions"><header class="course-nav"><a class="brand" href="/"><img class="brand-logo" src="/ads-logo.jpeg" alt="AI Data Solutions Ltd" /><span>AI Data Solutions</span></a><nav><a href="/">Home</a><a href="#register">Register</a></nav></header><main class="course-shell"><aside class="account-sidebar"><div><span class="side-label">LEARN WITH ADS</span><h2>Your learning space.</h2><p>Access course materials, invoices and certificates once your account is connected.</p></div><button class="login-trigger" data-open-login>Log in <span>→</span></button><small>Sign in is securely handled by your selected identity provider.</small></aside><section class="course-content"><div class="course-label">AI DATA ACADEMY / 2026</div><h1>AI Data Foundations<br />for business leaders.</h1><p class="course-lead">A practical programme for teams ready to turn their data strategy into confident, measurable action.</p><div class="course-meta"><div><b>Start date</b><span>10 October 2026</span></div><div><b>Format</b><span>Live online cohort</span></div><div><b>Duration</b><span>4 weeks</span></div><div><b>Course fee</b><span>€550 per person</span></div></div><div class="capacity"><span>Limited cohort</span><strong id="spot-count">Checking availability…</strong><small>Maximum 10 registrations</small></div><div class="course-outline"><h2>What you’ll explore</h2><ol><li><span>01</span> Identifying high-value AI opportunities</li><li><span>02</span> Building responsible data foundations</li><li><span>03</span> From pilot to practical adoption</li><li><span>04</span> Measuring momentum and value</li></ol></div><section class="course-preparation"><span class="course-label">Practical preparation</span><h2>Learn by building from the first session.</h2><p>The course will include hands-on exercises with Python, data, Git/GitHub, and AI technologies. To make sure we can start working on practical exercises from the first session, you will receive an email with a guideline on how to prepare for the course.</p><p>Don’t worry if some things are new to you—it will become easier when we put it into practice.</p></section><section class="register-card" id="register"><div><span class="course-label">Reserve your place</span><h2>Register for €550.</h2><p>Card and Apple Pay are processed by Stripe Checkout. We never receive or store payment-card details.</p><p class="payment-result" id="payment-result" hidden></p></div><form id="course-registration" novalidate><label>Email<input name="email" type="email" autocomplete="email" required /></label><div class="form-row"><label>First name<input name="firstName" autocomplete="given-name" required /></label><label>Last name<input name="lastName" autocomplete="family-name" required /></label></div><label>Phone number<input name="phone" type="tel" autocomplete="tel" required /></label><fieldset><legend>Payment method · €550</legend><label class="pay-option"><input name="payment" type="radio" value="stripe" checked /><span><b>Visa / Mastercard</b><small>Secure Stripe Checkout</small></span></label><label class="pay-option"><input name="payment" type="radio" value="apple-pay" /><span><b>Apple Pay</b><small>Secure Stripe Checkout on supported devices</small></span></label></fieldset><button class="register-button" type="submit">Continue to secure payment <span>→</span></button><p class="form-status" aria-live="polite"></p></form></section></section></main><SiteFooter /><dialog class="login-modal" id="login-modal"><button class="close-modal" aria-label="Close">×</button><span class="course-label">Account access</span><h2>Log in to AI Data Solutions.</h2><form id="local-account" class="local-account" novalidate><label>Username<input name="username" autocomplete="username" minlength="3" required /></label><label>Password<input name="password" type="password" autocomplete="new-password" minlength="8" required /></label><button type="submit">Create temporary session</button><small>No account or personal data is saved. Your temporary session ends when this page is closed.</small></form><div class="provider-grid"><button data-provider="Google">G <span>Continue with Google</span></button><button data-provider="Apple">● <span>Continue with Apple</span></button><button data-provider="LinkedIn">in <span>Continue with LinkedIn</span></button><button data-provider="GitHub">◉ <span>Continue with GitHub</span></button><button data-provider="Microsoft">⊞ <span>Continue with Microsoft</span></button><button data-provider="Enterprise SSO">↗ <span>Enterprise SSO</span></button></div><p class="provider-status" aria-live="polite"></p></dialog><script>const modal=document.querySelector('#login-modal');document.querySelectorAll('[data-open-login]').forEach((button)=>button.addEventListener('click',()=>modal.showModal()));modal.querySelector('.close-modal').addEventListener('click',()=>modal.close());modal.querySelectorAll('[data-provider]').forEach((button)=>button.addEventListener('click',()=>{modal.querySelector('.provider-status').textContent=`${button.dataset.provider} sign-in is ready to connect once provider credentials are configured.`}));modal.querySelector('#local-account').addEventListener('submit',(event)=>{event.preventDefault();const form=event.currentTarget;modal.querySelector('.provider-status').textContent=form.checkValidity()?'Temporary session created for this browser session. No data was saved.':'Use a username of at least 3 characters and a password of at least 8 characters.'});
+
+const form = document.querySelector('#course-registration')
+const status = form.querySelector('.form-status')
+const submitButton = form.querySelector('.register-button')
+const spotCount = document.querySelector('#spot-count')
+const result = document.querySelector('#payment-result')
+
+const showResult = (message, state) => {
+  result.textContent = message
+  result.dataset.state = state
+  result.hidden = false
+}
+
+const renderSeats = (available) => {
+  if (typeof available !== 'number') {
+    spotCount.textContent = 'Availability unavailable'
+    return
+  }
+  spotCount.textContent = available ? `${available} place${available === 1 ? '' : 's'} available` : 'Course full'
+  submitButton.disabled = available === 0
+  if (available === 0) status.textContent = 'This cohort is full. Please contact us for the next available course.'
+}
+
+const loadAvailability = async (registrationId) => {
+  const query = registrationId ? `?registration=${encodeURIComponent(registrationId)}` : ''
+  try {
+    const response = await fetch(`/api/course/availability${query}`, { headers: { accept: 'application/json' } })
+    if (!response.ok) throw new Error('Availability request failed')
+    const data = await response.json()
+    renderSeats(data.seatsAvailable)
+    return data
+  } catch (error) {
+    renderSeats(null)
+    return null
+  }
+}
+
+const params = new URLSearchParams(window.location.search)
+const paymentState = params.get('payment')
+const paidRegistration = params.get('registration')
+
+if (paymentState === 'success') {
+  form.hidden = true
+  showResult('Payment received. Confirming your place…', 'pending')
+  let attempts = 0
+  const confirmPlace = async () => {
+    const data = await loadAvailability(paidRegistration)
+    if (data && data.registrationStatus === 'PAID') {
+      showResult('Your place is confirmed. You will receive an email with your course preparation guideline.', 'success')
+      return
+    }
+    if (++attempts < 6) {
+      setTimeout(confirmPlace, 2000)
+      return
+    }
+    showResult('Payment received. Your place is being confirmed and we will email you shortly.', 'pending')
+  }
+  confirmPlace()
+} else {
+  if (paymentState === 'cancelled') {
+    showResult('Payment was cancelled, so no place has been booked. You can start again below.', 'error')
+  }
+  loadAvailability()
+}
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault()
+  form.classList.add('was-validated')
+  if (!form.checkValidity()) {
+    status.textContent = 'Please complete each required field before continuing.'
+    return
+  }
+
+  const fields = Object.fromEntries(new FormData(form))
+  submitButton.disabled = true
+  status.textContent = 'Reserving your place…'
+
+  try {
+    const response = await fetch('/api/course/register', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: fields.email,
+        firstName: fields.firstName,
+        lastName: fields.lastName,
+        phone: fields.phone,
+        paymentMethod: fields.payment,
+      }),
+    })
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok || !data.checkoutUrl) {
+      status.textContent = data.message || 'We could not start the payment. Please try again or contact us.'
+      submitButton.disabled = false
+      if (typeof data.seatsAvailable === 'number') renderSeats(data.seatsAvailable)
+      return
+    }
+
+    status.textContent = `Place held for ${data.holdMinutes} minutes — opening secure payment…`
+    window.location.assign(data.checkoutUrl)
+  } catch (error) {
+    status.textContent = 'We could not reach the registration service. Please check your connection and try again.'
+    submitButton.disabled = false
+  }
+})
+</script></BaseLayout>

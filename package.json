@@ -1,0 +1,19 @@
+{
+  "name": "ai-data-solutions",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^5.3.0",
+    "astro": "^5.7.0"
+  },
+  "dependencies": {
+    "@netlify/database": "^1.1.0",
+    "stripe": "^22.5.0"
+  }
+}

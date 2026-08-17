@@ -1,0 +1,7 @@
+.capacity{display:flex;align-items:center;gap:14px;border:1px solid #9cc8e2;background:#e8f6ff;padding:14px 17px;margin:22px 0;font-size:12px}.capacity span{font-weight:800;color:#237aac}.capacity strong{font-size:16px}.capacity small{margin-left:auto;color:#547180}.local-account{display:grid;gap:10px;border-top:1px solid #d8e3e8;border-bottom:1px solid #d8e3e8;padding:18px 0;margin:20px 0}.local-account label{display:grid;gap:5px;font-size:12px;font-weight:700}.local-account input{padding:10px;border:1px solid #b9cad3;border-radius:3px}.local-account button{border:0;background:#092f2b;color:#fff;padding:11px;font-weight:800;cursor:pointer}.local-account small{font-size:10px;color:#68808a;line-height:1.4}@media(max-width:700px){.capacity{align-items:start;flex-direction:column;gap:5px}.capacity small{margin-left:0}}
+.register-card>div>p.payment-result{margin:18px 0 0;padding:12px 14px;border-left:2px solid #39a9ff;background:#0e2638;font-size:12px;line-height:1.6;color:#d8ecfa}
+.register-card>div>p.payment-result[data-state=success]{border-left-color:#4fd18b}
+.register-card>div>p.payment-result[data-state=error]{border-left-color:#ff8c8c}
+.register-card>div>p.payment-result[hidden]{display:none}
+.register-card form[hidden]{display:none}
+.register-button:disabled{background:#2a4a60;color:#93b0c3;cursor:not-allowed}
